@@ -3,35 +3,64 @@ from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
-class student(BaseModel):
-    id: int
+
+students=[]
+
+class Student(BaseModel):
     name: str
+    email: str
     age: int
-    roll_number: int
-    department: str
-class Studentresponse(BaseModel):
-    id: int
-    name: str
-    age: int
-    roll_number: int
-    department: str
+    Roll_number:str
+    Department:str
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-    
 
-@app.post("/students/", response_model=Studentresponse)
-def create_student(student: student):
-    return Studentresponse(id=1, name=student.name, age=student.age, roll_number=student.roll_number, department=student.department)
+class StudentResponse(Student):
+    id: int
+   
 
-@app.get("/students/", response_model=List[Studentresponse])
-def read_students() -> List[Studentresponse]:
-    return [Studentresponse(id=1, name="John", age=20, roll_number=101, department="CS")]
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
-@app.put("/students/{student_id}", response_model=Studentresponse)
-def update_student(student_id: int, student: student):
-    return Studentresponse(id=student_id, name=student.name, age=student.age, roll_number=student.roll_number, department=student.department)
+def create_student(student:Student)->StudentResponse:
+    students.append(student)
+    return student
 
-@app.delete("/students/{student_id}")
-def delete_student(student_id: int):
-    return {"message": f"Student with id {student_id} deleted successfully"}
+def get_student_by_roll(roll):
+    for student in students:
+        if student.Roll_number==roll:
+            return student
+
+def read_student(roll:str)->StudentResponse:
+    return get_student_by_roll(roll) 
+
+
+def update_student(roll:str,student:Student)->StudentResponse:
+    return StudentResponse(roll=roll, **student.dict())
+
+def delete_student(roll:str):
+    return StudentResponse(roll=roll, **student.dict())
+
+@app.get("/students")
+def read_students():
+    return students
+
+@app.post("/students")
+def create_student_api(student:Student):
+    return create_student(student)
+
+@app.get("/students/{roll}")
+def read_student_api(roll:str):
+    return read_student(roll)
+
+@app.put("/students/{roll}")
+def update_student_api(roll:str,student:Student):
+    return update_student(roll,student)
+
+@app.delete("/students/{roll}")
+def delete_student_api(roll:str):
+    return delete_student(roll)
